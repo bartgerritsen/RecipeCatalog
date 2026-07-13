@@ -219,3 +219,6 @@ __marimo__/
 
 # Scraper output (regenerate with scraper.py)
 recipes.xlsx
+
+# Albert Heijn API tokens (albert_heijn_api.ipynb)
+ah_tokens.json

@@ -1,4 +1,4 @@
-# gm_scraper
+# RecipeCatalog
 
 Exports all recipes from [app.groei-maatje.nl](https://app.groei-maatje.nl) to an Excel file.
 
