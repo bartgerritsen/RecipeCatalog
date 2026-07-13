@@ -120,6 +120,35 @@ select.sort {
 }
 .chip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
 
+/* ---------- macro filter panel ---------- */
+.filter-panel {
+  max-width: 1200px; margin: 10px auto 0;
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px 14px; padding: 14px; background: var(--surface);
+  border: 1px solid var(--hairline); border-radius: 14px; box-shadow: var(--shadow);
+}
+.filter-panel[hidden] { display: none; }
+.filter-panel .range { display: flex; flex-direction: column; gap: 7px; }
+.filter-panel .range > span { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.filter-panel .range > span small { font-weight: 400; color: var(--muted); }
+.filter-panel .inputs { display: flex; align-items: center; gap: 8px; }
+.filter-panel .dash { color: var(--muted); }
+.filter-panel input[type="number"] {
+  width: 100%; min-width: 0; -moz-appearance: textfield; appearance: textfield;
+  background: var(--page); color: var(--ink);
+  border: 1px solid var(--hairline); border-radius: 9px;
+  padding: 8px 9px; font: inherit; font-size: 16px; outline: 0;
+}
+.filter-panel input[type="number"]:focus { border-color: var(--accent); }
+.filter-panel input[type="number"]::-webkit-outer-spin-button,
+.filter-panel input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+.filter-panel .reset {
+  grid-column: 1 / -1; justify-self: end;
+  border: 1px solid var(--hairline); background: var(--page); color: var(--ink-2);
+  border-radius: 999px; padding: 8px 16px; font-size: 13.5px; cursor: pointer;
+}
+.filter-panel .reset:hover { border-color: var(--accent); color: var(--accent); }
+
 /* ---------- grid ---------- */
 main { max-width: 1200px; margin: 0 auto; padding: 18px 16px calc(40px + env(safe-area-inset-bottom)); }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 16px; }
@@ -274,16 +303,57 @@ main { max-width: 1200px; margin: 0 auto; padding: 18px 16px calc(40px + env(saf
     </div>
     <select class="sort" id="sort" aria-label="Sorteren">
       <option value="name">Naam A–Z</option>
-      <option value="kcal-asc">Kcal ↑</option>
-      <option value="kcal-desc">Kcal ↓</option>
-      <option value="protein">Meeste eiwit</option>
+      <option value="kcal-desc">Kcal ↓ (hoog)</option>
+      <option value="kcal-asc">Kcal ↑ (laag)</option>
+      <option value="protein-desc">Eiwit ↓ (hoog)</option>
+      <option value="protein-asc">Eiwit ↑ (laag)</option>
+      <option value="carbs-desc">Koolhydraten ↓ (hoog)</option>
+      <option value="carbs-asc">Koolhydraten ↑ (laag)</option>
+      <option value="fat-desc">Vet ↓ (hoog)</option>
+      <option value="fat-asc">Vet ↑ (laag)</option>
       <option value="time">Snelste eerst</option>
     </select>
     <div class="chips" role="group" aria-label="Filters">
       <button class="chip" data-filter="fast" aria-pressed="false">≤ 30 min</button>
       <button class="chip" data-filter="protein" aria-pressed="false">≥ 30 g eiwit</button>
       <button class="chip" data-filter="light" aria-pressed="false">≤ 500 kcal</button>
+      <button class="chip chip-adv" id="advBtn" aria-pressed="false" aria-expanded="false" aria-controls="filterPanel">⚙ Macro-filter</button>
     </div>
+  </div>
+  <div class="filter-panel" id="filterPanel" hidden>
+    <div class="range" data-macro="kcal">
+      <span>🔥 Calorieën <small>(kcal)</small></span>
+      <div class="inputs">
+        <input type="number" inputmode="numeric" min="0" step="10" placeholder="min" data-bound="min" aria-label="Calorieën minimaal">
+        <span class="dash">–</span>
+        <input type="number" inputmode="numeric" min="0" step="10" placeholder="max" data-bound="max" aria-label="Calorieën maximaal">
+      </div>
+    </div>
+    <div class="range" data-macro="protein">
+      <span>💪 Eiwit <small>(g)</small></span>
+      <div class="inputs">
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="min" data-bound="min" aria-label="Eiwit minimaal">
+        <span class="dash">–</span>
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="max" data-bound="max" aria-label="Eiwit maximaal">
+      </div>
+    </div>
+    <div class="range" data-macro="carbs">
+      <span>🌾 Koolhydraten <small>(g)</small></span>
+      <div class="inputs">
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="min" data-bound="min" aria-label="Koolhydraten minimaal">
+        <span class="dash">–</span>
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="max" data-bound="max" aria-label="Koolhydraten maximaal">
+      </div>
+    </div>
+    <div class="range" data-macro="fat">
+      <span>🥑 Vet <small>(g)</small></span>
+      <div class="inputs">
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="min" data-bound="min" aria-label="Vet minimaal">
+        <span class="dash">–</span>
+        <input type="number" inputmode="numeric" min="0" step="1" placeholder="max" data-bound="max" aria-label="Vet maximaal">
+      </div>
+    </div>
+    <button class="reset" id="resetFilters" type="button">Wis macro-filter</button>
   </div>
 </header>
 
@@ -1567,7 +1637,10 @@ const DATA = [{"id":"cmpl09xca01yubjuhtifx2484","name":"Andijviestamppot met geh
 
 const $ = s => document.querySelector(s);
 const grid = $('#grid'), overlay = $('#overlay'), sheet = $('#sheet');
-const state = { q: '', sort: 'name', fast: false, protein: false, light: false };
+const state = {
+  q: '', sort: 'name', fast: false, protein: false, light: false,
+  range: { kcal: {}, protein: {}, carbs: {}, fat: {} },
+};
 const bySlug = Object.fromEntries(DATA.map(r => [r.slug, r]));
 const fmt = n => n == null ? '–' : (Math.round(n * 10) / 10).toLocaleString('nl-NL');
 const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -1603,22 +1676,35 @@ function macroBarHTML(r, h) {
   </div>`;
 }
 
+function inRange(value, bounds) {
+  return (bounds.min == null || value >= bounds.min) &&
+         (bounds.max == null || value <= bounds.max);
+}
+
 function applyFilters() {
   const q = state.q.trim().toLowerCase();
+  const rg = state.range;
   let list = DATA.filter(r =>
     (!q || r.search.includes(q)) &&
     (!state.fast || r.time <= 30) &&
     (!state.protein || (r.protein || 0) >= 30) &&
-    (!state.light || (r.kcal || 0) <= 500)
+    (!state.light || (r.kcal || 0) <= 500) &&
+    inRange(r.kcal || 0, rg.kcal) &&
+    inRange(r.protein || 0, rg.protein) &&
+    inRange(r.carbs || 0, rg.carbs) &&
+    inRange(r.fat || 0, rg.fat)
   );
   const s = state.sort;
-  list.sort((a, b) =>
-    s === 'kcal-asc' ? (a.kcal || 0) - (b.kcal || 0) :
-    s === 'kcal-desc' ? (b.kcal || 0) - (a.kcal || 0) :
-    s === 'protein' ? (b.protein || 0) - (a.protein || 0) :
-    s === 'time' ? a.time - b.time :
-    a.name.localeCompare(b.name, 'nl')
-  );
+  const macroSort = { 'protein': 'protein', 'carbs': 'carbs', 'fat': 'fat', 'kcal': 'kcal' };
+  list.sort((a, b) => {
+    const [field, dir] = s.split('-');
+    if (field === 'time') return a.time - b.time;
+    if (macroSort[field]) {
+      const diff = (a[field] || 0) - (b[field] || 0);
+      return dir === 'asc' ? diff : -diff;
+    }
+    return a.name.localeCompare(b.name, 'nl');
+  });
   return list;
 }
 
@@ -1649,13 +1735,41 @@ grid.addEventListener('click', e => {
 
 $('#q').addEventListener('input', e => { state.q = e.target.value; render(); });
 $('#sort').addEventListener('change', e => { state.sort = e.target.value; render(); });
-document.querySelectorAll('.chip').forEach(chip => {
+document.querySelectorAll('.chip[data-filter]').forEach(chip => {
   chip.addEventListener('click', () => {
     const k = chip.dataset.filter;
     state[k] = !state[k];
     chip.setAttribute('aria-pressed', state[k]);
     render();
   });
+});
+
+/* ---------- macro filter panel ---------- */
+const advBtn = $('#advBtn'), filterPanel = $('#filterPanel');
+advBtn.addEventListener('click', () => {
+  const open = filterPanel.hasAttribute('hidden');
+  filterPanel.toggleAttribute('hidden', !open);
+  advBtn.setAttribute('aria-expanded', open);
+});
+filterPanel.querySelectorAll('input[type="number"]').forEach(input => {
+  const macro = input.closest('.range').dataset.macro;
+  const bound = input.dataset.bound;
+  input.addEventListener('input', () => {
+    const v = input.value.trim();
+    if (v === '' || isNaN(parseFloat(v))) delete state.range[macro][bound];
+    else state.range[macro][bound] = parseFloat(v);
+    advBtn.setAttribute('aria-pressed', hasActiveRange());
+    render();
+  });
+});
+function hasActiveRange() {
+  return Object.values(state.range).some(b => b.min != null || b.max != null);
+}
+$('#resetFilters').addEventListener('click', () => {
+  state.range = { kcal: {}, protein: {}, carbs: {}, fat: {} };
+  filterPanel.querySelectorAll('input[type="number"]').forEach(i => { i.value = ''; });
+  advBtn.setAttribute('aria-pressed', 'false');
+  render();
 });
 
 /* ---------- detail ---------- */
